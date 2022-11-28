@@ -1,0 +1,29 @@
+version: "3.9"
+
+
+services:
+
+  speedtrap:
+    image: api-handler:test
+    env_file:
+      - app/.env
+    networks:
+      - bbb
+    volumes:
+      - ./tickets:/tmp/
+
+  camera:
+    image: camera:test
+    env_file:
+      - camera/.env
+    networks:
+      - bbb
+    volumes:
+      - ./tickets:/tmp/
+    #devices:
+    #  - /dev/video0:/dev/video0
+    #privileged: true
+
+networks:
+  bbb:
+    driver: bridge
