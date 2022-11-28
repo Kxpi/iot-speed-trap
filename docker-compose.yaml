@@ -1,28 +1,28 @@
 version: "3.9"
 
-
 services:
-
-  speedtrap:
+  speedtrap-handler:
     image: api-handler:test
+    build: ./app
     env_file:
-      - app/.env
+      - ./app/.env
     networks:
       - bbb
     volumes:
-      - ./tickets:/tmp/
+      - ./tickets:/opt
 
-  camera:
+  speedtrap-camera:
     image: camera:test
+    build: ./camera
     env_file:
-      - camera/.env
+      - ./camera/.env
     networks:
       - bbb
     volumes:
-      - ./tickets:/tmp/
-    #devices:
-    #  - /dev/video0:/dev/video0
-    #privileged: true
+      - ./tickets:/opt
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: true
 
 networks:
   bbb:
