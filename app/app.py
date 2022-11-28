@@ -15,6 +15,7 @@ app = Flask(__name__)
 ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.environ.get('AWS_SECRET_KEY_ID')
 CORE_ENDPOINT = os.environ.get('ENDPOINT')
+TOPIC = os.environ.get('TOPIC')
 
 # create a boto3 session to s3
 session = boto3.Session(
@@ -55,7 +56,7 @@ def mqtt_publish(data):
             pri_key_filepath = PRIVATE_KEY,
             client_bootstrap = client_bootstrap,
             ca_filepath = AMAZON_ROOT_CA_1,
-            client_id = data['location'],
+            client_id = TOPIC,
             clean_session = False,
             keep_alive_secs = 10)
     
@@ -65,7 +66,7 @@ def mqtt_publish(data):
     connect_future.result()
 
     # publish data to IoT Core
-    mqtt_connection.publish(topic=data['location'], payload=json.dumps(data), qos=mqtt.QoS.AT_LEAST_ONCE) 
+    mqtt_connection.publish(topic=TOPIC, payload=json.dumps(data), qos=mqtt.QoS.AT_LEAST_ONCE) 
     disconnect_future = mqtt_connection.disconnect()
     disconnect_future.result()
 

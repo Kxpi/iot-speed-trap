@@ -1,9 +1,8 @@
 version: "3.9"
 
 services:
-  speedtrap-handler:
-    image: api-handler:test
-    build: ./app
+  speedtrap-api:
+    image: kxpic/api-handler
     env_file:
       - ./app/.env
     networks:
@@ -12,8 +11,7 @@ services:
       - ./tickets:/opt
 
   speedtrap-camera:
-    image: camera:test
-    build: ./camera
+    image: kxpic/camera
     env_file:
       - ./camera/.env
     networks:

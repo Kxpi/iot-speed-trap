@@ -62,7 +62,7 @@ class WebcamStream :
 
 
 def notify_handler(**kwargs):
-    requests.post('http://speedtrap:5000/handler', json=kwargs)
+    requests.post('http://speedtrap-api:5000/handler', json=kwargs)
 
 
 if __name__=='__main__':
@@ -81,7 +81,7 @@ if __name__=='__main__':
         if ride_speed > limit:
             ticket_pic = webcam_stream.read()
             ride_id = uuid4().hex
-            path = f'/tmp/{ride_id}.png'
+            path = f'/opt/{ride_id}.png'
             imwrite(path , ticket_pic)
             notify_handler(
                 id = ride_id,
@@ -97,7 +97,7 @@ if __name__=='__main__':
                 timestamp = ride_timestamp,
                 location = trap_location)
 
-        time.sleep(5)
+        time.sleep(10)
 
  
     webcam_stream.stop()

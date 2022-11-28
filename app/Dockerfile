@@ -5,7 +5,7 @@ FROM debian:10
 WORKDIR /api-handler
 
 RUN apt-get update && \
-    apt-get install -y python3-pip
+    apt-get install -y python3-pip build-essential gcc libssl-dev cmake
 
 COPY . /api-handler
 
