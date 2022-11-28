@@ -23,19 +23,20 @@ session = boto3.Session(
 )
 s3 = session.resource('s3')
 
-def generate_ticket(data):
-    # pdf
-    return 0
 
 def upload_ticket_s3(data):
+    data['s3_key'] = f'{data["location"]}/{data["id"]}.png'
+
     try:
         s3.meta.client.upload_file(
-            Filename=data["ticket_file"], 
-            Bucket='speedtrap-tickets',
-            Key=f'{data["location"]}/{data["ticket_file"]}')
+            Filename = data["ticket_file"], 
+            Bucket = 'speedtrap-tickets',
+            Key = data['s3_key'])
     except ClientError as e:
         logging.warning(e)
-    
+
+
+    return data
 
 
 def mqtt_publish(data):
@@ -68,6 +69,7 @@ def mqtt_publish(data):
     disconnect_future = mqtt_connection.disconnect()
     disconnect_future.result()
 
+
 @app.route('/handler', methods=['POST'])
 def handler():
     # receive json
@@ -75,7 +77,7 @@ def handler():
 
     if 'ticket_file' in data.keys():
         #ticket_file = generate_ticket(data)
-        upload_ticket_s3(data)
+        data = upload_ticket_s3(data)
 
     mqtt_publish(data)
 
