@@ -15,6 +15,7 @@ app = Flask(__name__)
 ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.environ.get('AWS_SECRET_KEY_ID')
 CORE_ENDPOINT = os.environ.get('ENDPOINT')
+TOPIC = os.environ.get('TOPIC')
 
 # create a boto3 session to s3
 session = boto3.Session(
@@ -23,19 +24,20 @@ session = boto3.Session(
 )
 s3 = session.resource('s3')
 
-def generate_ticket(data):
-    # pdf
-    return 0
 
 def upload_ticket_s3(data):
+    data['s3_key'] = f'{data["location"]}/{data["id"]}.png'
+
     try:
         s3.meta.client.upload_file(
-            Filename=data["ticket_file"], 
-            Bucket='speedtrap-tickets',
-            Key=f'{data["location"]}/{data["ticket_file"]}')
+            Filename = data["ticket_file"], 
+            Bucket = 'speedtrap-tickets',
+            Key = data['s3_key'])
     except ClientError as e:
         logging.warning(e)
-    
+
+
+    return data
 
 
 def mqtt_publish(data):
@@ -54,7 +56,7 @@ def mqtt_publish(data):
             pri_key_filepath = PRIVATE_KEY,
             client_bootstrap = client_bootstrap,
             ca_filepath = AMAZON_ROOT_CA_1,
-            client_id = data['location'],
+            client_id = TOPIC,
             clean_session = False,
             keep_alive_secs = 10)
     
@@ -64,9 +66,10 @@ def mqtt_publish(data):
     connect_future.result()
 
     # publish data to IoT Core
-    mqtt_connection.publish(topic=data['location'], payload=json.dumps(data), qos=mqtt.QoS.AT_LEAST_ONCE) 
+    mqtt_connection.publish(topic=TOPIC, payload=json.dumps(data), qos=mqtt.QoS.AT_LEAST_ONCE) 
     disconnect_future = mqtt_connection.disconnect()
     disconnect_future.result()
+
 
 @app.route('/handler', methods=['POST'])
 def handler():
@@ -75,7 +78,7 @@ def handler():
 
     if 'ticket_file' in data.keys():
         #ticket_file = generate_ticket(data)
-        upload_ticket_s3(data)
+        data = upload_ticket_s3(data)
 
     mqtt_publish(data)
 

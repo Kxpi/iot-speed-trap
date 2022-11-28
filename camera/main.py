@@ -1,5 +1,6 @@
 import os
 import time
+import logging
 import requests
 from datetime import datetime
 from uuid import uuid4
@@ -15,13 +16,13 @@ class WebcamStream :
 
         # see if created successfully
         if self.vcap.isOpened() is False :
-            print("[Exiting]: Error accessing webcam stream.")
+            logging.error("[Exiting]: Error accessing webcam stream.")
             exit(0)
 
         self.grabbed , self.frame = self.vcap.read()
 
         if self.grabbed is False :
-            print('[Exiting] No more frames to read')
+            logging.error('[Exiting] No more frames to read')
             exit(0)
 
         # set stopped to true before starting new thread
@@ -45,7 +46,7 @@ class WebcamStream :
             self.grabbed , self.frame = self.vcap.read()
 
             if self.grabbed is False :
-                print('[Exiting] No more frames to read')
+                logging.error('[Exiting] No more frames to read')
                 self.stopped = True
                 break
         self.vcap.release()
@@ -61,7 +62,7 @@ class WebcamStream :
 
 
 def notify_handler(**kwargs):
-    requests.post('http://speedtrap:5000/handler', json=kwargs)
+    requests.post('http://speedtrap-api:5000/handler', json=kwargs)
 
 
 if __name__=='__main__':
@@ -80,7 +81,7 @@ if __name__=='__main__':
         if ride_speed > limit:
             ticket_pic = webcam_stream.read()
             ride_id = uuid4().hex
-            path = f'/tmp/{ride_id}.png'
+            path = f'/opt/{ride_id}.png'
             imwrite(path , ticket_pic)
             notify_handler(
                 id = ride_id,
@@ -96,7 +97,7 @@ if __name__=='__main__':
                 timestamp = ride_timestamp,
                 location = trap_location)
 
-        time.sleep(2)
+        time.sleep(10)
 
  
     webcam_stream.stop()
