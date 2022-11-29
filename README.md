@@ -18,7 +18,7 @@ Below you can find both hardware and software specification. We used BBB with ar
 * Logitech C270 USB camera
     
 ### Software - services
-As you will see in docker-compose file, some .env files are provided. They are not in this repo, since they contain secrets and configuration variables used in containers. They are attached below with variables used for this specific project.
+As you will see in docker-compose file, some .env files are provided. They are not in this repo, since they contain secrets and configuration variables used in containers. **In order for the code to work properly, they should be specified**, unless you decide to make some changes. They are attached below with variables used for this specific project.
 
 #### Speed trap container (**NOTE**: as of now it's only unidirectional)
 * Utilizes a USB camera and 2 motion sensors
@@ -40,7 +40,13 @@ As you will see in docker-compose file, some .env files are provided. They are n
 * .env: \
 ![image](https://user-images.githubusercontent.com/70852683/204422689-36779716-7779-4484-aa08-fccaf440bec9.png)
 
-
+#### Deployment
+In order to deploy it the same way we did, you need to have ```docker compose``` installed. Make sure you have AWS IoT Core certificates in /app dir and provide correct paths in [app.py](app/app.py) to find them. Also, either create .env files or provide configuration variables in some other way. Please read [images](#images) section to learn how to properly build images for given architecture. \
+Assuming you have them on your system, specify their names in [docker-compose.yaml](docker-compose.yaml) and run
+```
+docker compose up -d
+```
+```-d``` flag stands for detached mode, which will run it in the background without throwing messages mentioned [here](#possible-issues-with-opencv), however for debuging purposes it's recommended to not use this flag.
 
 #### Diagram
 <p align="center">
@@ -65,7 +71,6 @@ docker buildx create --name builder
 docker buildx use builder
 docker buildx build --push --platform linux/arm/v7 -t [username]/camera:test ./camera
 ```
-When you will have the images, just channge their names in [docker-compose.yaml](docker-compose.yaml) and you should be good to go.
 
 ## Possible issues with OpenCV
 When working with OpenCV, we encountered an error/warning almost every time it took a picture (so with 30FPS it was around 30 times every second).
