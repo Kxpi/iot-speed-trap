@@ -23,7 +23,7 @@ As you will see in docker-compose file, some .env files are provided. They are n
 #### Speed trap container (**NOTE**: as of now it's only unidirectional)
 * Utilizes a USB camera and 2 motion sensors
 * Camera is operated in a seperate thread by OpenCV to ensure smooth and always available picture
-* Whenever a car passess through a motion sensor, timestamp of this event is saved
+* Whenever a car passes through a motion sensor, timestamp of this event is saved
 * Having 2 timestamps, one after another, from both sensors and knowing the distance between them, we calculate speed
 * This data, along with configured location and last timestamp is **always** sent to API and publishd via MQTT to AWS IoT Core
 * If the speed is greater than configured limit, camera takes a picture and saves it into shared volume
@@ -65,11 +65,11 @@ AWS IoT Core is a service that allows to add *things* that will publish their da
 Due to low resources available, it's highly recommended to build Docker images on a different, stronger machine and pull them on target device. Let's be honest, 512MB RAM isn't much. Choosing Docker Compose over K3s also allowed to minimize CPU and RAM usage with both usually staying way below 50%.
 
 ## Images
-As mentioned, it's hard to build images on such low-RAM device, and it's easierr to build them on a proper machine and pull from hub on Beaglebone/Raspberry later (if network speed will be tolerable). However, because of different architectures we can't use e.g. AMD64 image. A very helpful tool is **buildx** command which comes standard with most of Docker installations. When building an image, it allows to specify for which platform it's supposed to be. Below is an example of how to build and push an image of camera service:
+As mentioned, it's hard to build images on such low-RAM device, and it's easier to build them on a proper machine and pull from hub on Beaglebone/Raspberry later (if network speed will be tolerable). However, because of different architectures we can't use e.g. AMD64 image. A very helpful tool is **buildx** command which comes standard with most of Docker installations. When building an image, it allows to specify for which platform it's supposed to be built. Below is an example of how to build and push an image of camera service:
 ```
 docker buildx create --name builder
 docker buildx use builder
-docker buildx build --push --platform linux/arm/v7 -t [username]/camera:test ./camera
+docker buildx build --push --platform linux/arm/v7 -t [username]/camera:[tag] ./camera
 ```
 
 ## Possible issues with OpenCV
