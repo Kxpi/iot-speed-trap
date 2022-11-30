@@ -20,7 +20,7 @@ Below you can find both hardware and software specification. We used BBB with ar
 ### Software - services
 As you will see in docker-compose file, some .env files are provided. They are not in this repo, since they contain secrets and configuration variables used in containers. **In order for the code to work properly, they should be specified**, unless you decide to make some changes. They are attached below with variables used for this specific project.
 
-#### Speed trap container (**NOTE**: as of now it's only unidirectional)
+#### Speed trap container (**NOTE**: it's unidirectional, since we had only one camera)
 * Utilizes a USB camera and 2 motion sensors
 * Camera is operated in a seperate thread by OpenCV to ensure smooth and always available picture
 * Whenever a car passes through a motion sensor, timestamp of this event is saved
@@ -38,7 +38,8 @@ As you will see in docker-compose file, some .env files are provided. They are n
 * It **always** publishes received data to AWS IoT Core
 * In order for MQTT messages to work, you need to add **certificates** sub-directory in /app. After that, generate and place there neccessary files mentioned in this [instruction](https://aws.amazon.com/premiumsupport/knowledge-center/iot-core-publish-mqtt-messages-python/)
 * .env: \
-![image](https://user-images.githubusercontent.com/70852683/204422689-36779716-7779-4484-aa08-fccaf440bec9.png)
+![image](https://user-images.githubusercontent.com/70852683/204927734-84f2b51b-c8c8-4455-8759-9cb78b4a95cb.png)
+
 
 #### Deployment
 In order to deploy it the same way we did, you need to have ```docker compose``` installed. Make sure you have AWS IoT Core certificates in /app dir and provide correct paths in [app.py](app/app.py) to find them. Also, either create .env files or provide configuration variables in some other way. Please read [images](#images) section to learn how to properly build images for given architecture. \
@@ -54,7 +55,7 @@ docker compose up -d
 </p>
 
 ### AWS
-AWS IoT Core is a service that allows to add *things* that will publish their data over MQTT. It's possible to subscribe to given topic and lookup incoming data. There were 2 IoT Rules created - one is triggered on every message received, adding records to AWS Timestream DB, and the other rule acts every time there is a field with ticket. The second one invokes a AWS Lambda function responsible for generating a PDF ticket with picture from S3 and sending it via e-mail to (for now) examplary driver. Timestream stores all recorded measurements, which allows to utilize Grafana to analyze and filter collected data.
+AWS IoT Core is a service that allows to add *things* that will publish their data over MQTT. It's possible to subscribe to given topic and lookup incoming data. There were 2 IoT Rules created - one is triggered on every message received, adding records to DynamoDB, and the other rule acts every time there is a field with ticket. The second one invokes a AWS Lambda function responsible for taking a certain picture from S3, creating an e-mail message with ticket and sending it via SES to (for now) examplary driver. DynamoDB stores all fields of data received over MQTT in JSONs, which allows to utilize Grafana for analyzing and filtering collected data.
 
 #### Infrastructure
 <p align="center">
