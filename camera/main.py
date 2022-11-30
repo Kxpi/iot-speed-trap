@@ -19,6 +19,7 @@ class WebcamStream :
             logging.error("[Exiting]: Error accessing webcam stream.")
             exit(0)
 
+        # first read is used for validation purposes
         self.grabbed , self.frame = self.vcap.read()
 
         if self.grabbed is False :
@@ -38,7 +39,7 @@ class WebcamStream :
         self.t.start()
 
     def update(self):
-        # grab picture infinitely
+        # grabs picture infinitely on ~30fps
         while True :
             if self.stopped is True :
                 break
@@ -53,7 +54,6 @@ class WebcamStream :
 
     def read(self):
         # returns last taken image
-        time.sleep(0.5)
         return self.frame
 
     def stop(self):
@@ -62,6 +62,7 @@ class WebcamStream :
 
 
 def notify_handler(**kwargs):
+    # sends a post with measured data (and optionaly path to ticket image) to api service
     requests.post('http://speedtrap-api:5000/handler', json=kwargs)
 
 

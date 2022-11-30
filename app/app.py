@@ -15,6 +15,7 @@ app = Flask(__name__)
 ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY_ID')
 SECRET_KEY = os.environ.get('AWS_SECRET_KEY_ID')
 CORE_ENDPOINT = os.environ.get('ENDPOINT')
+BUCKET_NAME = os.environ.get('BUCKET_NAME')
 TOPIC = os.environ.get('TOPIC')
 
 # create a boto3 session to s3
@@ -25,22 +26,29 @@ session = boto3.Session(
 s3 = session.resource('s3')
 
 
-def upload_ticket_s3(data):
+def upload_s3(data):
+    """
+    Uploads picture to S3, returns data with S3 key which will be used to find it in lambda email function
+    """
+    # create S3 key
     data['s3_key'] = f'{data["location"]}/{data["id"]}.png'
 
+    # upload file to S3
     try:
         s3.meta.client.upload_file(
             Filename = data["ticket_file"], 
-            Bucket = 'speedtrap-tickets',
+            Bucket = BUCKET_NAME,
             Key = data['s3_key'])
     except ClientError as e:
         logging.warning(e)
-
 
     return data
 
 
 def mqtt_publish(data):
+    """
+    Publishes collected data in form of a JSON to IoT core
+    """
     # paths to certificates
     CERTIFICATE = "certificates/certificate.pem.crt"
     PRIVATE_KEY = "certificates/private.pem.key"
@@ -76,13 +84,14 @@ def handler():
     # receive json
     data = request.get_json()
 
+    # if the picture was taken, upload to S3
     if 'ticket_file' in data.keys():
-        #ticket_file = generate_ticket(data)
-        data = upload_ticket_s3(data)
+        data = upload_s3(data)
 
+    # publish JSON to IoT Core
     mqtt_publish(data)
 
-    return 'OK'
+    return "Published successfully", 201
 
 
 if __name__ == '__main__':
