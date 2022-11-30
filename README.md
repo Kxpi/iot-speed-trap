@@ -50,7 +50,7 @@ docker compose up -d
 
 #### Diagram
 <p align="center">
-  <img src="https://github.com/Kxpi/iot-speed-trap/blob/main/images/DeviceArchitecture.jpg?raw=true" width=80%/>
+  <img src="https://github.com/Kxpi/iot-speed-trap/blob/main/pictures/DeviceArchitecture.jpg?raw=true" width=80%/>
 </p>
 
 ### AWS
@@ -58,7 +58,7 @@ AWS IoT Core is a service that allows to add *things* that will publish their da
 
 #### Infrastructure
 <p align="center">
-  <img src="https://github.com/Kxpi/iot-speed-trap/blob/main/images/IoT_Architecture.png?raw=true" width=80%/>
+  <img src="https://github.com/Kxpi/iot-speed-trap/blob/main/pictures/IoT_Architecture.png?raw=true" width=80%/>
 </p>
 
 ## Performance
