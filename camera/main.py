@@ -78,10 +78,10 @@ if __name__=='__main__':
     for _ in range(1000):
         ride_speed = randint(30, 70)
         ride_timestamp = datetime.now().strftime('%H:%M:%S-%d-%m-%Y')
-        ride_id = uuid4().hex
 
         if ride_speed > limit:
             ticket_pic = webcam_stream.read()
+            ride_id = uuid4().hex
             path = f'/opt/{ride_id}.png'
             imwrite(path , ticket_pic)
             notify_handler(
@@ -93,7 +93,6 @@ if __name__=='__main__':
                 location = trap_location)
         else:
             notify_handler(
-                id = ride_id,
                 speed = ride_speed,
                 speed_limit = limit,
                 timestamp = ride_timestamp,
