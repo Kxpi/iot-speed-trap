@@ -55,12 +55,16 @@ docker compose up -d
 </p>
 
 ### AWS
-AWS IoT Core is a service that allows to add *things* that will publish their data over MQTT. It's possible to subscribe to given topic and lookup incoming data. There were 2 IoT Rules created - one is triggered on every message received, adding records to DynamoDB, and the other rule acts every time there is a field with ticket. The second one invokes a AWS Lambda function responsible for taking a certain picture from S3, creating an e-mail message with ticket and sending it via SES to (for now) examplary driver. DynamoDB stores all fields of data received over MQTT in JSONs, which allows to utilize Grafana for analyzing and filtering collected data.
+AWS IoT Core is a service that allows to add *things* that will publish their data over MQTT. It's possible to subscribe to given topic and lookup incoming data. There were 2 IoT Rules created - one is triggered on every message received, and the other rule acts every time there is a field with ticket. First rule passes measured data to Timestream, which allows to utilize Grafana for analyzing and filtering collected data. The second one invokes an AWS Lambda function responsible for taking a certain picture from S3, creating an e-mail message with ticket and sending it via SES to (for now) examplary driver. It also  adds records with data regarding tickets to DynamoDB. 
 
 #### Infrastructure
 <p align="center">
   <img src="https://github.com/Kxpi/iot-speed-trap/blob/main/pictures/IoT_Architecture.png?raw=true" width=80%/>
 </p>
+
+#### Grafana
+![image](https://user-images.githubusercontent.com/70852683/205206973-e44ec907-e7a7-4357-b803-d92569d296e8.png)
+
 
 ## Performance
 Due to low resources available, it's highly recommended to build Docker images on a different, stronger machine and pull them on target device. Let's be honest, 512MB RAM isn't much. Choosing Docker Compose over K3s also allowed to minimize CPU and RAM usage with both usually staying way below 50%.
