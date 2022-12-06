@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import requests
-from time import time
+from time import time, sleep
 from uuid import uuid4
 from threading import Thread
 from datetime import datetime
@@ -17,6 +17,9 @@ GPIO.setup(EXIT_PIN, GPIO.IN)
 
 # use multiplier to get different speed values - default should be 1
 MULTIPLIER = int(os.environ.get('MULTIPLIER'))
+
+# this variable specifies delay time before taking frame from Webcam thread (variable with frame is updated with slight delay)
+OFFSET = float(os.environ.get('OFFSET'))
 
 # helper class for camera in thread
 class WebcamStream :
@@ -64,6 +67,7 @@ class WebcamStream :
 
     def read(self):
         # returns last taken image
+        sleep(OFFSET)
         return self.frame
 
     def stop(self):
@@ -89,10 +93,11 @@ def measure_speed(distance, timeout):
             # listen for falling edge on exit pin with timeout
             while (time() - start < timeout):
                 if GPIO.input(EXIT_PIN) == 0:
-                    # calculate and return velocity
+                    # calculate and return velocity [km/h]
                     exit = time()
                     time_passed = exit - start
-                    v = distance / time_passed
+                    v_kmh = (distance / time_passed) * 3.6
+                    v = round(v_kmh, 2)
                     return v * MULTIPLIER
             # return -1 if timeout
             else:
@@ -101,7 +106,7 @@ def measure_speed(distance, timeout):
 
 
 if __name__=='__main__':
-    # get speedtrap location and speed_limit
+    # get speedtrap location, speed_limit, distance and timeout value
     trap_location = os.environ.get('LOCATION')
     limit = int(os.environ.get('SPEED_LIMIT'))
     distance = float(os.environ.get('DISTANCE'))
