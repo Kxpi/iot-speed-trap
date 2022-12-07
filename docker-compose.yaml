@@ -18,8 +18,7 @@ services:
       - bbb
     volumes:
       - ./tickets:/opt
-    devices:
-      - /dev/video0:/dev/video0
+      - /dev:/dev
     privileged: true
 
 networks:

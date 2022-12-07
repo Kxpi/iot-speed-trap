@@ -2,13 +2,26 @@ import os
 import time
 import logging
 import requests
-from datetime import datetime
+from time import time, sleep
 from uuid import uuid4
-from random import randint
-from cv2 import VideoCapture, imwrite
 from threading import Thread
+from datetime import datetime
+import Adafruit_BBIO.GPIO as GPIO
+from cv2 import VideoCapture, imwrite
 
-# helper class for implementing multi-threading
+# setup GPIO with pins that receive signals
+START_PIN = os.environ.get('START_PIN')
+EXIT_PIN = os.environ.get('EXIT_PIN')
+GPIO.setup(START_PIN, GPIO.IN)
+GPIO.setup(EXIT_PIN, GPIO.IN)
+
+# use multiplier to get different speed values - default should be 1
+MULTIPLIER = int(os.environ.get('MULTIPLIER'))
+
+# this variable specifies delay time before taking frame from Webcam thread (variable with frame is updated with slight delay)
+OFFSET = float(os.environ.get('OFFSET'))
+
+# helper class for camera in thread
 class WebcamStream :
     def __init__(self):
         # create VideoCapture object to access camera
@@ -54,6 +67,7 @@ class WebcamStream :
 
     def read(self):
         # returns last taken image
+        sleep(OFFSET)
         return self.frame
 
     def stop(self):
@@ -66,39 +80,60 @@ def notify_handler(**kwargs):
     requests.post('http://speedtrap-api:5000/handler', json=kwargs)
 
 
+def measure_speed(distance, timeout):
+    """
+    Measures speed of cars passing through two proximity sensors
+    """
+    # listen for falling edge on START_PIN
+    while True:
+        if GPIO.input(START_PIN) == 0:
+            start = time()
+            # listen for falling edge on exit pin with timeout
+            while (time() - start < timeout):
+                if GPIO.input(EXIT_PIN) == 0:
+                    # calculate and return velocity [km/h]
+                    exit = time()
+                    time_passed = exit - start
+                    v_kmh = (distance / time_passed) * 3.6
+                    return v_kmh * MULTIPLIER
+            return -1
+                
+
+
 if __name__=='__main__':
-    # get speedtrap location and speed_limit
+    # get speedtrap location, speed_limit, distance and timeout value
     trap_location = os.environ.get('LOCATION')
     limit = int(os.environ.get('SPEED_LIMIT'))
+    distance = float(os.environ.get('DISTANCE'))
+    timeout = int(os.environ.get('TIMEOUT'))
 
     # create and start stream in thread
     webcam_stream = WebcamStream()
     webcam_stream.start()
 
-    for _ in range(1000):
-        ride_speed = randint(30, 70)
+    while(True):
+        ride_speed = measure_speed(distance, timeout)
         ride_timestamp = datetime.now().strftime('%H:%M:%S-%d-%m-%Y')
 
-        if ride_speed > limit:
-            ticket_pic = webcam_stream.read()
-            ride_id = uuid4().hex
-            path = f'/opt/{ride_id}.png'
-            imwrite(path , ticket_pic)
-            notify_handler(
-                id = ride_id,
-                speed = ride_speed,
-                speed_limit = limit,
-                timestamp = ride_timestamp,
-                ticket_file = path,
-                location = trap_location)
+        if ride_speed > 0:
+            if ride_speed > limit:
+                ticket_pic = webcam_stream.read()
+                ride_id = uuid4().hex
+                path = f'/opt/{ride_id}.png'
+                imwrite(path , ticket_pic)
+                notify_handler(
+                    id = ride_id,
+                    speed = ride_speed,
+                    speed_limit = limit,
+                    timestamp = ride_timestamp,
+                    ticket_file = path,
+                    location = trap_location)
+            else:
+                notify_handler(
+                    speed = ride_speed,
+                    speed_limit = limit,
+                    timestamp = ride_timestamp,
+                    location = trap_location)
+
         else:
-            notify_handler(
-                speed = ride_speed,
-                speed_limit = limit,
-                timestamp = ride_timestamp,
-                location = trap_location)
-
-        time.sleep(10)
-
- 
-    webcam_stream.stop()
+            logging.warning('Timeout')
