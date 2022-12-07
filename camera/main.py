@@ -84,8 +84,6 @@ def measure_speed(distance, timeout):
     """
     Measures speed of cars passing through two proximity sensors
     """
-    # setup timeout
-    timeout = time() + timeout
     # listen for falling edge on START_PIN
     while True:
         if GPIO.input(START_PIN) == 0:
@@ -97,11 +95,8 @@ def measure_speed(distance, timeout):
                     exit = time()
                     time_passed = exit - start
                     v_kmh = (distance / time_passed) * 3.6
-                    v = round(v_kmh, 2)
-                    return v * MULTIPLIER
-            # return -1 if timeout
-            else:
-                return -1
+                    return v_kmh * MULTIPLIER
+            return -1
                 
 
 
@@ -141,4 +136,4 @@ if __name__=='__main__':
                     location = trap_location)
 
         else:
-            print('Timeout')
+            logging.warning('Timeout')
